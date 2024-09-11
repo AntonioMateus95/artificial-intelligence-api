@@ -4,3 +4,6 @@ spring:
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
+    gemini:
+      base-url: "https://generativelanguage.googleapis.com/v1/models"
+      api-key: ${GEMINI_API_KEY}

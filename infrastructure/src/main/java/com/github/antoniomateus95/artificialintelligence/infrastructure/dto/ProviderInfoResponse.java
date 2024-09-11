@@ -1,4 +1,4 @@
-package com.github.antoniomateus95.artificialintelligence.infrastructure.client.openai.dto;
+package com.github.antoniomateus95.artificialintelligence.infrastructure.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import lombok.Data;
 
 @Data
-public class OpenAiInfo {
+public class ProviderInfoResponse {
 
   @JsonPropertyDescription("My name is")
   private String name;

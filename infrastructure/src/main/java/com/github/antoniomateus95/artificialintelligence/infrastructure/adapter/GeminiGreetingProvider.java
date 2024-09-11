@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.antoniomateus95.artificialintelligence.domain.model.ProviderInfo;
 import com.github.antoniomateus95.artificialintelligence.domain.model.ProviderType;
 import com.github.antoniomateus95.artificialintelligence.domain.provider.GreetingProvider;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.GeminiClient;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.dto.GeminiCandidateResponse;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.dto.GeminiContent;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.dto.GeminiContentPart;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.dto.GeminiResponse;
+import com.github.antoniomateus95.artificialintelligence.infrastructure.client.gemini.mapper.GeminiMapper;
 import com.github.antoniomateus95.artificialintelligence.infrastructure.dto.ProviderInfoResponse;
 import com.github.antoniomateus95.artificialintelligence.infrastructure.mapper.GreetingMapper;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.ChatClient;
-import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.parser.BeanOutputParser;
@@ -19,9 +23,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class OpenAiGreetingProvider implements GreetingProvider {
+public class GeminiGreetingProvider implements GreetingProvider {
 
-  private final ChatClient chatClient;
+  private final GeminiClient geminiClient;
+  private final GeminiMapper geminiMapper;
   private final ObjectMapper objectMapper;
   private final GreetingMapper greetingMapper;
 
@@ -35,13 +40,21 @@ public class OpenAiGreetingProvider implements GreetingProvider {
 
     PromptTemplate promptTemplate = new PromptTemplate(describeYourselfPrompt);
     Prompt prompt = promptTemplate.create(Map.of("format", format));
-    ChatResponse response = chatClient.call(prompt);
+    GeminiResponse response = geminiClient.call(geminiMapper.toGeminiRequest(prompt));
 
-    return greetingMapper.toDomain(parser.parse(response.getResult().getOutput().getContent()));
+    return greetingMapper.toDomain(response.getCandidates()
+        .stream()
+        .findFirst()
+        .map(GeminiCandidateResponse::getContent)
+        .map(GeminiContent::getParts)
+        .flatMap(parts -> parts.stream().findFirst())
+        .map(GeminiContentPart::getText)
+        .map(parser::parse)
+        .orElse(null));
   }
 
   @Override
   public boolean supports(ProviderType providerType) {
-    return ProviderType.OPENAI.equals(providerType);
+    return ProviderType.GEMINI.equals(providerType);
   }
 }
