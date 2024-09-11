@@ -1,5 +1,8 @@
 package com.github.antoniomateus95.artificialintelligence.application.controller;
 
+import com.github.antoniomateus95.artificialintelligence.application.dto.ProviderResponse;
+import com.github.antoniomateus95.artificialintelligence.application.mapper.GreetingDtoMapper;
+import com.github.antoniomateus95.artificialintelligence.domain.model.ProviderInfo;
 import com.github.antoniomateus95.artificialintelligence.domain.model.ProviderType;
 import com.github.antoniomateus95.artificialintelligence.domain.service.GreetingService;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
 
   private final GreetingService greetingService;
+  private final GreetingDtoMapper greetingDtoMapper;
 
   @GetMapping
-  public ResponseEntity<String> hello(@RequestHeader String provider) {
-    String providerData = greetingService.hello(ProviderType.from(provider));
-    return ResponseEntity.ok(providerData);
+  public ResponseEntity<ProviderResponse> hello(@RequestHeader String provider) {
+    ProviderInfo providerData = greetingService.hello(ProviderType.from(provider));
+    return ResponseEntity.ok(greetingDtoMapper.toResponse(providerData));
   }
 }
